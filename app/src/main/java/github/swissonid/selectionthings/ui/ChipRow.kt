@@ -72,49 +72,121 @@ fun ChipsGroup(
     }
 }
 
+fun defaultOnChipSelectionBlock(
+    chips: List<ChipConfig>,//unused
+    chipConfig: ChipConfig,
+    setInternalTextValue: (String) -> Unit,
+    setInternalSelectedConfig: (ChipConfig?) -> Unit,
+    onChipSelected: ((ChipConfig) -> Unit)? = null
+) {
+    if (chipConfig.isSelected) {
+        setInternalTextValue(chipConfig.text)
+        setInternalSelectedConfig(chipConfig)
+    } else {
+        setInternalTextValue("")
+        setInternalSelectedConfig(null)
+    }
+    onChipSelected?.invoke(chipConfig)
+}
 
-val chipConfigs = (1..3).map { ChipConfig(text = "Chip $it") }
+typealias OnChipSelectionBlock = (
+    chips: List<ChipConfig>,
+    chipConfig: ChipConfig,
+    setInternalTextValue: (String) -> Unit,
+    setInternalSelectedConfig: (ChipConfig?) -> Unit,
+    onChipSelected: ((ChipConfig) -> Unit)?
+) -> Unit
+
 
 @Composable
-fun ChipAndTextField() {
-    val (textValue, setTextValue) = remember { mutableStateOf("") }
-    val (selectedConfig, setSelectedConfig) = remember { mutableStateOf<ChipConfig?>(null) }
+fun ChipAndTextField(
+    chipConfigs: List<ChipConfig>,
+    textValue: String = "",
+    selectedConfig: ChipConfig? = null,
+    onChipSelected: ((ChipConfig) -> Unit)? = null,
+    onChipSelectionBlock: OnChipSelectionBlock = ::defaultOnChipSelectionBlock
+) {
+    val (internalTextValue, setInternalTextValue) = remember { mutableStateOf(selectedConfig?.text ?: textValue) }
+    val (internalSelectedConfig, setInternalSelectedConfig) = remember {
+        mutableStateOf(
+            selectedConfig
+        )
+    }
     TextField(
         modifier = Modifier.fillMaxWidth(),
-        value = textValue, onValueChange = { currentText ->
-            setTextValue(currentText)
+        value = internalTextValue, onValueChange = { currentText ->
+            setInternalTextValue(currentText)
             if (currentText.length < 6) return@TextField
             val foundIndex =
                 chipConfigs.indexOfFirst { it.text.lowercase() == currentText.lowercase() }
-            if (foundIndex == -1) setSelectedConfig(null)
-            else setSelectedConfig(chipConfigs[foundIndex])
+            if (foundIndex == -1) setInternalSelectedConfig(null)
+            else setInternalSelectedConfig(chipConfigs[foundIndex])
         })
     ChipsGroup(
-        selected = selectedConfig,
+        selected = internalSelectedConfig,
         onChipSelected = {
-            if (it.isSelected) {
-                setTextValue(it.text)
-                setSelectedConfig(it)
-            } else {
-                setTextValue("")
-                setSelectedConfig(null)
-            }
+            onChipSelectionBlock(
+                chipConfigs,
+                it,
+                setInternalTextValue,
+                setInternalSelectedConfig,
+                onChipSelected
+            )
         },
         chips = chipConfigs
     )
 }
 
+
 @Preview
 @Composable
 fun ChipGroupScreen() {
+    val chipConfigs = (1..3).map { ChipConfig(text = "Chip $it") }
     SelectionThingsTheme {
         Surface {
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
-                ChipAndTextField()
+                ChipAndTextField(
+                    chipConfigs,
+                )
+                ChipAndTextField(
+                    chipConfigs,
+                    textValue = "With init text value"
+                )
+                ChipAndTextField(
+                    chipConfigs,
+                    selectedConfig = chipConfigs[2]
+                )
+                ChipAndTextField(
+                    chipConfigs,
+                    textValue = "Custom Chip selection",
+                    onChipSelectionBlock = ::customOnChipSelectionBlock
+                )
             }
         }
     }
+
+}
+
+fun customOnChipSelectionBlock(
+    chips: List<ChipConfig>,
+    chipConfig: ChipConfig,
+    setInternalTextValue: (String) -> Unit,
+    setInternalSelectedConfig: (ChipConfig?) -> Unit,
+    onChipSelected: ((ChipConfig) -> Unit)? = null
+) {
+    if (chipConfig.isSelected) {
+        var text = ""
+        chips
+            .filter { it.key != chipConfig.key }
+            .forEach { text += " ${it.key}" }
+        setInternalTextValue(text)
+        setInternalSelectedConfig(chipConfig)
+    } else {
+        setInternalTextValue("")
+        setInternalSelectedConfig(null)
+    }
+    onChipSelected?.invoke(chipConfig)
 }
 
