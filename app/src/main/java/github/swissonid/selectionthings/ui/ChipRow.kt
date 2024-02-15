@@ -72,6 +72,15 @@ fun ChipsGroup(
     }
 }
 
+/**
+ * The default implementation of onChipSelectionBlock
+ * It updates the text value and the selectedConfig based on the chip selection
+ * @param chips: List<ChipConfig> The list of chips
+ * @param chipConfig: ChipConfig The selected chip
+ * @param setInternalTextValue: (String) -> Unit The function to update the text value
+ * @param setInternalSelectedConfig: (ChipConfig?) -> Unit The function to update the selectedConfig
+ * @param onChipSelected: ((ChipConfig) -> Unit)? The callback to be invoked after the selection
+ */
 fun defaultOnChipSelectionBlock(
     chips: List<ChipConfig>,//unused
     chipConfig: ChipConfig,
@@ -89,6 +98,14 @@ fun defaultOnChipSelectionBlock(
     onChipSelected?.invoke(chipConfig)
 }
 
+/**
+ * The block to be invoked when a chip is selected
+ * @param chips: List<ChipConfig> The list of chips
+ * @param chipConfig: ChipConfig The selected chip
+ * @param setInternalTextValue: (String) -> Unit The function to update the text value
+ * @param setInternalSelectedConfig: (ChipConfig?) -> Unit The function to update the selectedConfig
+ * @param onChipSelected: ((ChipConfig) -> Unit)? The callback to be invoked after the selection
+ */
 typealias OnChipSelectionBlock = (
     chips: List<ChipConfig>,
     chipConfig: ChipConfig,
