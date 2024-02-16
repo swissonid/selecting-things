@@ -53,6 +53,7 @@ fun defaultOnChipSelectionBlock(
         setInternalTextValue("")
         setInternalSelectedConfig(null)
     }
+    chipConfig.onClick?.invoke()
     onChipSelected?.invoke(chipConfig)
 }
 

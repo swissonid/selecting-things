@@ -1,10 +1,12 @@
 package github.swissonid.selectionthings.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import github.swissonid.selectionthings.ui.chipgroup.ChipAndTextField
@@ -68,13 +70,19 @@ internal fun otherCustomOnChipSelectionBlock(
 @Composable
 fun ChipGroupScreen() {
     val chipConfigs = (1..3).map { ChipConfig(text = "Chip $it") }
+    val localContxt = LocalContext.current
     SelectionThingsTheme {
         Surface {
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
                 ChipAndTextField(
-                    chipConfigs,
+                    chipConfigs + ChipConfig(
+                        text="what ever",
+                        onClick = {
+                            Toast.makeText(localContxt,"What ever", Toast.LENGTH_SHORT).show()
+                        }
+                    ) ,
                 )
                 ChipAndTextField(
                     chipConfigs,
@@ -82,6 +90,7 @@ fun ChipGroupScreen() {
                 )
                 ChipAndTextField(
                     chipConfigs,
+
                     selectedConfig = chipConfigs[2]
                 )
                 ChipAndTextField(
