@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
  * @param onChipSelected: ((ChipConfig) -> Unit)? The callback to be invoked after the selection
  */
 typealias OnChipSelectionBlock = (
-    chips: List<ChipConfig>,
     chipConfig: ChipConfig,
+    chipConfigs: List<ChipConfig>,
     setInternalTextValue: (String) -> Unit,
     setInternalSelectedConfig: (ChipConfig?) -> Unit,
     onChipSelected: ((ChipConfig) -> Unit)?
@@ -33,15 +33,15 @@ typealias OnChipSelectionBlock = (
 /**
  * The default implementation of onChipSelectionBlock
  * It updates the text value and the selectedConfig based on the chip selection
- * @param chips: List<ChipConfig> The list of chips
+ * @param chipConfigs: List<ChipConfig> The list of chips
  * @param chipConfig: ChipConfig The selected chip
  * @param setInternalTextValue: (String) -> Unit The function to update the text value
  * @param setInternalSelectedConfig: (ChipConfig?) -> Unit The function to update the selectedConfig
  * @param onChipSelected: ((ChipConfig) -> Unit)? The callback to be invoked after the selection
  */
 fun defaultOnChipSelectionBlock(
-    chips: List<ChipConfig>,//unused
     chipConfig: ChipConfig,
+    chipConfigs: List<ChipConfig>,//unused
     setInternalTextValue: (String) -> Unit,
     setInternalSelectedConfig: (ChipConfig?) -> Unit,
     onChipSelected: ((ChipConfig) -> Unit)? = null
@@ -54,6 +54,26 @@ fun defaultOnChipSelectionBlock(
         setInternalSelectedConfig(null)
     }
     onChipSelected?.invoke(chipConfig)
+}
+
+typealias OnTextValueChangeBlock = (
+    currentText: String,
+    chipConfigs: List<ChipConfig>,
+    setInternalTextValue: (String) -> Unit,
+    setInternalSelectedConfig: (ChipConfig?) -> Unit,
+) -> Unit
+fun defaultOnTextValueChangeBlock(
+    currentText: String,
+    chipConfigs: List<ChipConfig>,
+    setInternalTextValue: (String) -> Unit,
+    setInternalSelectedConfig: (ChipConfig?) -> Unit
+) {
+    setInternalTextValue(currentText)
+    if (currentText.length < 6) return
+    val foundIndex =
+        chipConfigs.indexOfFirst { it.text.lowercase() == currentText.lowercase() }
+    if (foundIndex == -1) setInternalSelectedConfig(null)
+    else setInternalSelectedConfig(chipConfigs[foundIndex])
 }
 
 @Composable
@@ -95,7 +115,8 @@ fun ChipAndTextField(
     textValue: String = "",
     selectedConfig: ChipConfig? = null,
     onChipSelected: ((ChipConfig) -> Unit)? = null,
-    onChipSelectionBlock: OnChipSelectionBlock = ::defaultOnChipSelectionBlock
+    onChipSelectionBlock: OnChipSelectionBlock = ::defaultOnChipSelectionBlock,
+    onTextValueChangeBlock: OnTextValueChangeBlock = ::defaultOnTextValueChangeBlock
 ) {
     val (internalTextValue, setInternalTextValue) = remember {
         mutableStateOf(
@@ -109,20 +130,22 @@ fun ChipAndTextField(
     }
     TextField(
         modifier = Modifier.fillMaxWidth(),
-        value = internalTextValue, onValueChange = { currentText ->
-            setInternalTextValue(currentText)
-            if (currentText.length < 6) return@TextField
-            val foundIndex =
-                chipConfigs.indexOfFirst { it.text.lowercase() == currentText.lowercase() }
-            if (foundIndex == -1) setInternalSelectedConfig(null)
-            else setInternalSelectedConfig(chipConfigs[foundIndex])
-        })
+        value = internalTextValue,
+        onValueChange = {
+            onTextValueChangeBlock(
+                it,
+                chipConfigs,
+                setInternalTextValue,
+                setInternalSelectedConfig
+            )
+        }
+    )
     ChipsGroup(
         selected = internalSelectedConfig,
         onChipSelected = {
             onChipSelectionBlock(
-                chipConfigs,
                 it,
+                chipConfigs,
                 setInternalTextValue,
                 setInternalSelectedConfig,
                 onChipSelected
